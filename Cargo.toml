@@ -14,5 +14,5 @@ clap = {version = "4.4.12", features = ["derive"]}
 name = "gematria"
 path = "src/main.rs"
 
-[build]
-rustdocflags = [ "--html-in-header", "./src/docs-header.html" ]
+[package.metadata.docs.rs]
+rustdoc-args = [ "--html-in-header", "./src/docs-header.html" ]

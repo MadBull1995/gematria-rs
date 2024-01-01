@@ -1,7 +1,7 @@
 # Gematria-rs
 
 [![Crates.io](https://img.shields.io/crates/v/gematria-rs.svg)](https://crates.io/crates/gematria-rs)
-[![Documentation](https://docs.rs/gematria-rs/badge.svg)](https://docs.rs/gematria_rs/latest/gematria_rs/)
+[![Documentation](https://img.shields.io/docsrs/gematria_rs/latest)](https://docs.rs/gematria_rs/latest/gematria_rs/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 `Gematria-rs` is a Rust library designed for calculating Gematria values in Hebrew texts. It supports multiple calculation methods and is suitable for analyzing texts like the Hebrew Bible. The library includes a command-line interface (CLI) for easy interaction.
@@ -69,6 +69,19 @@ The CLI provides the following functionalities:
 - **Group Words by Gematria**: Analyze a text file and group words based on their Gematria values.
 
 Use `--help` to see all available commands and options.
+
+### Examples
+> You can use the full text file of the Hebrew Bible at [`/data/hebrew-all.txt`](data/hebrew-all.txt)
+
+Group all words that equals the same value in "Standard" gematria from `stdin`:
+```bash
+./target/release/gematria group-words < ./data/hebrew-all.txt
+```
+Or from argument:
+```bash
+./target/release/gematria group-words "נכנס יין יצא סוד"
+#  70 -> יין, סוד
+```
 
 ## Development
 
