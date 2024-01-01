@@ -28,7 +28,7 @@ Or adding it to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-gematria_rs = "0.1.0"
+gematria_rs = "0.1.1"
 ```
 
 Use it in your project:
