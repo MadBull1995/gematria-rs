@@ -1,6 +1,6 @@
 # Gematria-rs
 
-[![CI](https://github.com/MadBull1995/gematria-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/MadBull1995/gematria-rs/actions/workflows/ci.yml)
+[![CI](https://github.com/MadBull1995/gematria-rs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/MadBull1995/gematria-rs/actions/workflows/ci.yml)
 [![Crates.io](https://img.shields.io/crates/v/gematria-rs.svg)](https://crates.io/crates/gematria-rs)
 [![Documentation](https://img.shields.io/docsrs/gematria_rs/latest)](https://docs.rs/gematria_rs/latest/gematria_rs/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

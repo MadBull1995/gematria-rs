@@ -302,6 +302,14 @@ impl GematriaContext {
         }
     }
 
+    fn handle_vowels(&self, word: &str) -> String {
+        if self.preserve_vowels {
+            word.to_string()
+        } else {
+            self.remove_hebrew_vowels(word)
+        }
+    }
+
     fn remove_hebrew_vowels(&self, text: &str) -> String {
         text.chars().filter(|&c| !self.is_hebrew_vowel(c)).collect()
     }
@@ -356,11 +364,7 @@ impl GematriaContext {
     /// Calculates the gematria value of a Hebrew word or phrase.
     pub fn calculate_value(&self, text: &str) -> GematriaResult {
         let method = self.get_current_method();
-        let processed_text = if self.preserve_vowels {
-            text.to_string()
-        } else {
-            self.remove_hebrew_vowels(text)
-        };
+        let processed_text = self.handle_vowels(text);
         // Check if caching is enabled and use it if available
         if let Some(ref cache) = self.cache {
             let mut cache = cache.borrow_mut();
@@ -384,11 +388,7 @@ impl GematriaContext {
         text.split_whitespace()
             .flat_map(|w| w.split('\u{05BE}'))
             .filter_map(|word| {
-                let processed_text = if self.preserve_vowels {
-                    word.to_string()
-                } else {
-                    self.remove_hebrew_vowels(word)
-                };
+                let processed_text = self.handle_vowels(word);
                 let word_value = self.calculate_value(&processed_text).value();
                 if word_value == target_value {
                     Some(processed_text)
@@ -399,15 +399,40 @@ impl GematriaContext {
             .collect()
     }
 
+    /// Searches for words in the provided text with a gematria value matching that of the target value.
+    pub fn search_matching_values(&self, target_value: &u32, text: &str) -> Vec<String> {
+        text.split_whitespace()
+            .flat_map(|w| w.split('\u{05BE}'))
+            .filter_map(|word| {
+                let processed_text = self.handle_vowels(word);
+                let word_value = self.calculate_value(&processed_text).value();
+                if word_value == *target_value {
+                    Some(processed_text)
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
     /// Reads a text and groups words with matching gematria values, avoiding duplicates.
+    ///
+    /// # Examples:
+    ///
+    /// ```
+    /// use std::io;
+    /// use gematria_rs::GematriaContext;
+    ///
+    /// let gmctx = GematriaContext::default();
+    /// let grouped_result = gmctx.group_words_by_gematria("נכנס יין יצא סוד")?;
+    ///
+    /// assert_eq!(grouped_result, vec![(70, vec!["סוד".to_string(),"יין".to_string()])]);
+    /// # Ok::<(), io::Error>(())
+    /// ```
     pub fn group_words_by_gematria(&self, text: &str) -> io::Result<Vec<(u32, Vec<String>)>> {
         let mut grouped_words = HashMap::new();
         for word in text.split_whitespace().flat_map(|w| w.split('\u{05BE}')) {
-            let processed_text = if self.preserve_vowels {
-                word.to_string()
-            } else {
-                self.remove_hebrew_vowels(word)
-            };
+            let processed_text = self.handle_vowels(word);
 
             let value = self.calculate_value(&processed_text).value();
 
@@ -444,6 +469,7 @@ impl GematriaContext {
     }
 }
 
+/// `GematriaResult` used for structured result of calculations.
 impl GematriaResult {
     /// Creates a new result object.
     pub fn new(value: u32, method: GematriaMethod, word: String) -> Self {
@@ -490,7 +516,7 @@ mod tests {
 
     #[test]
     fn test_default_map() {
-        let gmctx = GematriaBuilder::new().init_gematria();
+        let gmctx = GematriaContext::default();
 
         assert_eq!(gmctx.get_current_method(), GematriaMethod::MisparHechrechi);
         assert_eq!(gmctx.calculate_char_value('א'), 1);
