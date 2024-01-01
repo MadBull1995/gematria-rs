@@ -163,7 +163,7 @@ pub struct GematriaResult {
 /// assert_ne!(res_1.word(), hello_without_vowels);
 /// assert_eq!(res_1.value(), res_2.value());
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct GematriaBuilder {
     // Optional calculation method.
     method: Option<GematriaMethod>,
@@ -173,12 +173,6 @@ pub struct GematriaBuilder {
 
     // Flag to preserve or remove vowels in the input, defaulted to false.
     presevre_vowels: bool,
-}
-
-impl Default for GematriaBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
 }
 
 fn create_hebrew_filled_letters_map() -> FullCharMap {
@@ -232,7 +226,9 @@ fn create_hebrew_index_map() -> CharMap {
 
 impl GematriaBuilder {
     pub fn new() -> Self {
-        Self::default()
+        Self {
+            ..Default::default()
+        }
     }
 
     /// Method to enable caching of values
