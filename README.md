@@ -34,17 +34,15 @@ gematria_rs = "0.1.0"
 Use it in your project:
 
 ```rust
-use gematria_rs::GematriaBuilder;
-use gematria_rs::GematriaMethod;
+use gematria_rs::GematriaContext;
 
-let builder = GematriaBuilder::new();
-let gematria_context = builder
-    .with_method(GematriaMethod::MisparHechrechi)
-    .init_gematria();
+let gematria_context = GematriaContext::default();
 
-let value = gematria_context.calculate_word_value("שלום");
+let value = gematria_context.calculate_value("שלום");
 println!("Gematria value: {}", value);
 ```
+
+> You can use the `gematria_rs::GematriaBuilder` to change the default settings for the context easily.
 
 ### As a CLI Tool
 To use the CLI tool, clone the repository and build the project:
