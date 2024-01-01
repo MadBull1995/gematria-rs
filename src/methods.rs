@@ -193,7 +193,7 @@ impl OtyiotBeMilui {
         if let Some(filled_form) = self.filled_letters.get(&charcter) {
             filled_form
                 .iter()
-                .filter_map(|&c| Some(
+                .map(|&c| {
                     match self.char_to_index.get(&c).unwrap() {
                         // Unique handling for final forms
                         23 => 20, // ך
@@ -203,7 +203,7 @@ impl OtyiotBeMilui {
                         27 => 90, // ץ
                         // Standard calculation for other letters
                         index => std_gematria_value(index),
-                    }))
+                    }})
                 .sum()
         } else {
             0

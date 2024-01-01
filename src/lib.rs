@@ -175,6 +175,12 @@ pub struct GematriaBuilder {
     presevre_vowels: bool,
 }
 
+impl Default for GematriaBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 fn create_hebrew_filled_letters_map() -> FullCharMap {
     let full_names = vec![
         ('א', vec!['א', 'ל', 'ף']),
@@ -226,11 +232,7 @@ fn create_hebrew_index_map() -> CharMap {
 
 impl GematriaBuilder {
     pub fn new() -> Self {
-        Self {
-            method: None,
-            enable_cache: false,
-            presevre_vowels: false,
-        }
+        Self::default()
     }
 
     /// Method to enable caching of values
@@ -437,7 +439,7 @@ impl GematriaContext {
 
     /// Gets the index of a Hebrew character.
     pub fn get_character_index(&self, character: &char) -> Option<&u32> {
-        self.character_map.char_to_index.get(&character)
+        self.character_map.char_to_index.get(character)
     }
 
     /// Sets the current gematria method to desired one.

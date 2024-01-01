@@ -1,5 +1,6 @@
 # Gematria-rs
 
+![CI](https://github.com/MadBull1995/gematria-rs/workflows/ci/badge.svg?branch=main&event=push)
 [![Crates.io](https://img.shields.io/crates/v/gematria-rs.svg)](https://crates.io/crates/gematria-rs)
 [![Documentation](https://img.shields.io/docsrs/gematria_rs/latest)](https://docs.rs/gematria_rs/latest/gematria_rs/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
