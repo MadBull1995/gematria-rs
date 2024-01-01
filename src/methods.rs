@@ -4,7 +4,7 @@ use crate::{CharMap, FullCharMap};
 
 /// Enumerates various gematria calculation methods.
 /// Includes traditional and specialized methods like Mispar Hechrechi and Otiyot BeMilui.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
 pub enum GematriaMethod {
     MisparHechrechi,
     MisparGadol,

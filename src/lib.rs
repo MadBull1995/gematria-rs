@@ -7,9 +7,9 @@
 //! calculate gematria values for Hebrew characters and words. It supports optional caching for improved
 //! performance and can be configured to preserve or remove Hebrew vowels in the calculations.
 //!
-//! `GematriaBuilder` facilitates a flexible construction of `GematriaContext` with various configuration options.
+//! [`GematriaBuilder`] facilitates a flexible construction of `GematriaContext` with various configuration options.
 //!
-//! Example usage:
+//! Example usage with [`GematriaBuilder`]:
 //! ```
 //! use gematria_rs::{GematriaBuilder, GematriaMethod};
 //!
@@ -29,7 +29,22 @@
 //! assert_ne!(res_1.word(), hello_without_vowels);
 //! assert_eq!(res_1.value(), res_2.value());
 //! ```
+//! Example usage with [`IntoGematriaVal`] trait:
+//! ```
+//! use gemtria_rs::*;
 //!
+//! let c = 'א';
+//! assert_eq!(c.gematria_val(&GematriaMethod::MisparKatan), 1);
+//! let s = "בעזרת השם";
+//! ssert_eq!(
+//!     s.gematria_val(&GematriaMethod::MisparHechrechi),
+//!     1024
+//! );
+//! assert_eq!(
+//!     s.to_string().gematria_val(&GematriaMethod::MisparGadol),
+//!     1584
+//! );
+//! ```
 //! Author: Amit Shmulevitch
 
 mod methods;
@@ -117,7 +132,9 @@ impl Default for GematriaContext {
     }
 }
 
+/// Used to alias the standard hebrew alphabet mapping.
 pub type CharMap = HashMap<char, u32>;
+/// Used to alias the "filled letters" hebrew alphabet mapping.
 pub type FullCharMap = HashMap<char, Vec<char>>;
 
 /// `HebrewCharacterMap` maps Hebrew characters to their corresponding numeric indices.
@@ -175,6 +192,7 @@ pub struct GematriaBuilder {
     presevre_vowels: bool,
 }
 
+/// Used to create a hebrew letter filled map, used for [`methods::GematriaMethod::OtiyotBeMilui`] calculations.
 fn create_hebrew_filled_letters_map() -> FullCharMap {
     let full_names = vec![
         ('א', vec!['א', 'ל', 'ף']),
@@ -225,13 +243,14 @@ fn create_hebrew_index_map() -> CharMap {
 }
 
 impl GematriaBuilder {
+    /// Creates new `GematriaBuilder`.
     pub fn new() -> Self {
         Self {
             ..Default::default()
         }
     }
 
-    /// Method to enable caching of values
+    /// Method to enable caching of values.
     pub fn with_cache(mut self, enable: bool) -> Self {
         self.enable_cache = enable;
         self
@@ -243,7 +262,7 @@ impl GematriaBuilder {
         self
     }
 
-    /// Will preserve the original vowels on outputs
+    /// Will preserve the original vowels on outputs.
     pub fn with_vowels(mut self, presevre_vowels: bool) -> Self {
         self.presevre_vowels = presevre_vowels;
         self
@@ -258,6 +277,7 @@ impl GematriaBuilder {
     }
 }
 
+// Utils function to parse the method of gematria.
 fn process_method_dyn(
     method: GematriaMethod,
     char_map: HebrewCharacterMap,
@@ -302,6 +322,7 @@ impl GematriaContext {
         }
     }
 
+    /// Processing different hebrew vowels, will check against the flags passed to `GematriaContext`.
     fn handle_vowels(&self, word: &str) -> String {
         if self.preserve_vowels {
             word.to_string()
@@ -310,14 +331,17 @@ impl GematriaContext {
         }
     }
 
+    /// Removes all hebrew vowels from text.
     fn remove_hebrew_vowels(&self, text: &str) -> String {
         text.chars().filter(|&c| !self.is_hebrew_vowel(c)).collect()
     }
 
+    /// Wheter this [`char`] vowel is included with vowel.
     fn is_hebrew_vowel(&self, c: char) -> bool {
         matches!(c, '\u{0591}'..='\u{05C7}')
     }
 
+    /// Gets the hebrew char index within the alphabet order (1 based).
     fn get_indices_for_word(&self, word: &str) -> Vec<u32> {
         word.chars()
             .filter_map(|c| self.character_map.char_to_index.get(&c))
@@ -325,6 +349,7 @@ impl GematriaContext {
             .collect()
     }
 
+    /// Util function for calculate gematria value without using cache.
     fn calculate_value_no_cache(&self, word: &str) -> u32 {
         self.get_indices_for_word(word)
             .iter()
@@ -332,6 +357,7 @@ impl GematriaContext {
             .sum()
     }
 
+    /// Gets the current method used to calculate Gematria on the current [`GematriaContext`].
     pub fn get_current_method(&self) -> GematriaMethod {
         self.calculation_strategy.method_type()
     }
@@ -339,7 +365,7 @@ impl GematriaContext {
     /// Calculates the gematria value of a single Hebrew character.
     pub fn calculate_char_value(&self, character: char) -> u32 {
         let method = self.get_current_method();
-        let cache_key = (method.clone(), character.to_string());
+        let cache_key = (method, character.to_string());
 
         // Check if value is in cache
         if let Some(ref cache) = self.cache {
@@ -368,7 +394,7 @@ impl GematriaContext {
         // Check if caching is enabled and use it if available
         if let Some(ref cache) = self.cache {
             let mut cache = cache.borrow_mut();
-            if let Some(&value) = cache.get(&(method.clone(), processed_text.to_string())) {
+            if let Some(&value) = cache.get(&(method, processed_text.to_string())) {
                 return GematriaResult::new(value, method, processed_text.to_owned());
             }
 
@@ -426,7 +452,7 @@ impl GematriaContext {
     /// let gmctx = GematriaContext::default();
     /// let grouped_result = gmctx.group_words_by_gematria("נכנס יין יצא סוד")?;
     ///
-    /// assert_eq!(grouped_result, vec![(70, vec!["סוד".to_string(),"יין".to_string()])]);
+    /// assert_eq!(grouped_result, vec![(70, vec!["יין".to_string(),"סוד".to_string()])]);
     /// # Ok::<(), io::Error>(())
     /// ```
     pub fn group_words_by_gematria(&self, text: &str) -> io::Result<Vec<(u32, Vec<String>)>> {
@@ -506,6 +532,63 @@ impl PushIfNotExists for Vec<String> {
         if !self.contains(&item) {
             self.push(item);
         }
+    }
+}
+
+/// Used to implement `Into` functionality for easy calculations.
+pub trait IntoGematriaVal {
+    /// Calculate the value for a given cipher
+    fn gematria_val(&self, method: &GematriaMethod) -> u32;
+}
+
+impl IntoGematriaVal for char {
+    /// # Examples
+    /// ```
+    /// use gematria_rs::*;
+    ///
+    /// let val = 'א'.gematria_val(&GematriaMethod::MisparHechrechi);
+    /// assert_eq!(val, 1)
+    /// ```
+    fn gematria_val(&self, method: &GematriaMethod) -> u32 {
+        let gmctx = GematriaBuilder::new()
+            .with_method(*method)
+            .with_vowels(true)
+            .init_gematria();
+        gmctx.calculate_char_value(*self)
+    }
+}
+
+impl IntoGematriaVal for String {
+    /// # Examples
+    /// ```
+    /// use gematria_rs::*;
+    ///
+    /// let val = "בעזרת השם".to_string().gematria_val(&GematriaMethod::MisparHechrechi);
+    /// assert_eq!(val, 1024)
+    /// ```
+    fn gematria_val(&self, method: &GematriaMethod) -> u32 {
+        let gmctx = GematriaBuilder::new()
+            .with_method(*method)
+            .with_vowels(true)
+            .init_gematria();
+        gmctx.calculate_value(self).value()
+    }
+}
+
+impl IntoGematriaVal for str {
+    /// # Examples
+    /// ```
+    /// use gematria_rs::*;
+    ///
+    /// let val = "בעזרת השם".gematria_val(&GematriaMethod::MisparHechrechi);
+    /// assert_eq!(val, 1024)
+    /// ```
+    fn gematria_val(&self, method: &GematriaMethod) -> u32 {
+        let gmctx = GematriaBuilder::new()
+            .with_method(*method)
+            .with_vowels(true)
+            .init_gematria();
+        gmctx.calculate_value(self).value()
     }
 }
 
@@ -714,5 +797,32 @@ mod tests {
 
         // Assert that the vector is sorted by the length of each group
         assert!(result.windows(2).all(|w| w[0].1.len() >= w[1].1.len()));
+    }
+
+    #[test]
+    fn test_trait_char() {
+        let method = &GematriaMethod::MisparHechrechi;
+        let c = 'א';
+        let val = c.gematria_val(method);
+
+        assert_eq!(val, 1);
+    }
+
+    #[test]
+    fn test_trait_string() {
+        let method = &GematriaMethod::MisparHechrechi;
+        let s = "סוד".to_string();
+        let val = s.gematria_val(method);
+
+        assert_eq!(val, 70);
+    }
+
+    #[test]
+    fn test_trait_str() {
+        let method = &GematriaMethod::MisparHechrechi;
+        let s = "סוד";
+        let val = s.gematria_val(method);
+
+        assert_eq!(val, 70);
     }
 }
