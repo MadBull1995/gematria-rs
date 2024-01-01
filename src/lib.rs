@@ -46,6 +46,57 @@ type GematriaCtxCache = RefCell<HashMap<(GematriaMethod, String), u32>>;
 /// `GematriaContext` holds the core logic for gematria calculations.
 /// It encapsulates the mapping of Hebrew characters to their numeric values and the chosen calculation strategy.
 /// Optionally, it can cache calculated values for improved performance and handle vowel preservation in input words.
+///
+/// # Fields
+/// - `character_map`: A mapping of Hebrew characters to their numeric values.
+/// - `calculation_strategy`: The current gematria calculation strategy, implemented as a trait object.
+/// - `cache`: An optional cache to store previously calculated gematria values for quick retrieval.
+/// - `preserve_vowels`: A flag to determine whether to preserve Hebrew vowels in calculation results.
+///
+/// # Examples
+///
+/// Creating a default `GematriaContext`:
+///
+/// ```
+/// use gematria_rs::GematriaContext;
+///
+/// // Initialize the builder and choose the calculation method
+/// let gematria_context = GematriaContext::default();
+/// 
+/// // Use the context to calculate the gematria value of a word
+/// let value = gematria_context.calculate_value("שלום");
+/// println!("Gematria value: {}", value.value());
+/// ```
+/// 
+/// Creating a new `GematriaContext` with a specific calculation method and default settings:
+///
+/// ```
+/// use gematria_rs::{GematriaBuilder, GematriaMethod, GematriaContext};
+///
+/// // Initialize the builder and choose the calculation method
+/// let gematria_context = GematriaBuilder::new()
+///     .with_method(GematriaMethod::MisparGadol)
+///     .init_gematria();
+///
+/// // Use the context to calculate the gematria value of a word
+/// let value = gematria_context.calculate_value("שלום");
+/// println!("Gematria value: {}", value.value());
+/// ```
+///
+/// Creating a `GematriaContext` with caching enabled and vowel preservation:
+///
+/// ```
+/// use gematria_rs::{GematriaBuilder, GematriaMethod, GematriaContext};
+///
+/// let gematria_context = GematriaBuilder::new()
+///     .with_method(GematriaMethod::MisparGadol)
+///     .with_cache(true)  // Enable caching
+///     .with_vowels(true) // Preserve vowels
+///     .init_gematria();
+///
+/// let value = gematria_context.calculate_value("גֵּם");
+/// println!("Gematria value with vowels: {}", value.value());
+/// ```
 pub struct GematriaContext {
     // Hebrew character to numeric value mapping.
     character_map: HebrewCharacterMap,
@@ -58,6 +109,12 @@ pub struct GematriaContext {
 
     // Flag to determine whether to preserve vowels in calculations results.
     preserve_vowels: bool,
+}
+
+impl Default for GematriaContext {
+    fn default() -> Self {
+        GematriaBuilder::new().init_gematria()
+    }
 }
 
 pub type CharMap = HashMap<char, u32>;
@@ -84,8 +141,28 @@ pub struct GematriaResult {
     word: String,
 }
 
-/// `GematriaBuilder` provides a builder pattern for constructing `GematriaContext`.
+/// `GematriaBuilder` provides a builder pattern for constructing [`GematriaContext`].
 /// It allows specifying the gematria calculation method, whether to enable caching, and vowel preservation.
+/// Example usage:
+/// ```
+/// use gematria_rs::{GematriaBuilder, GematriaMethod};
+///
+/// let gmctx = GematriaBuilder::new()
+///     .with_method(GematriaMethod::MisparHechrechi)
+///     .with_cache(true)
+///     .with_vowels(true)
+///     .init_gematria();
+///
+/// let hello = "שָׁלוֹם";
+/// let res_1 = gmctx.calculate_value(hello);
+/// println!("Gematria value: {}", res_1.value());
+/// // The word original vowels preserved on the result
+/// let hello_without_vowels = "שלום";
+/// let res_2 = gmctx.calculate_value(hello_without_vowels);
+/// assert_eq!(res_1.word(), hello);
+/// assert_ne!(res_1.word(), hello_without_vowels);
+/// assert_eq!(res_1.value(), res_2.value());
+/// ```
 #[derive(Debug, Clone)]
 pub struct GematriaBuilder {
     // Optional calculation method.
@@ -162,11 +239,13 @@ impl GematriaBuilder {
         self
     }
 
+    /// Sets a specific method to init the [`GematriaContext`], it is defaulted to [`methods::GematriaMethod::MisparHechrechi`].
     pub fn with_method(mut self, method: GematriaMethod) -> Self {
         self.method = Some(method);
         self
     }
 
+    /// Will preserve the original vowels on outputs
     pub fn with_vowels(mut self, presevre_vowels: bool) -> Self {
         self.presevre_vowels = presevre_vowels;
         self
