@@ -6,6 +6,7 @@ license = "MIT"
 authors = ["Amit Shmulevitch <amitsh1995@gmail.com>"]
 description = "A rust implementation of the Gematria, a traditional Hebrew numerology system."
 repository = "https://github.com/MadBull1995/gematria-rs"
+exclude = ["data/hebrew-all.txt"]
 
 [dependencies]
 clap = {version = "4.4.12", features = ["derive"]}
