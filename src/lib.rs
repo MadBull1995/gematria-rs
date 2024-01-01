@@ -1,49 +1,45 @@
-/// Gematria-rs Library API
-/// 
-/// This module provides an implementation of the Gematria, a traditional Hebrew numerology system.
-/// It supports various methods such as Mispar Hechrechi, Mispar Gadol, Mispar Katan, and Otiyot BeMilui.
-///
-/// The core functionality is encapsulated in the `GematriaContext` struct, which offers methods to 
-/// calculate gematria values for Hebrew characters and words. It supports optional caching for improved
-/// performance and can be configured to preserve or remove Hebrew vowels in the calculations.
-///
-/// `GematriaBuilder` facilitates a flexible construction of `GematriaContext` with various configuration options.
-///
-/// Example usage:
-/// ```
-/// use gematria_rs::{GematriaBuilder, GematriaMethod};
-/// 
-/// let gmctx = GematriaBuilder::new()
-///     .with_method(GematriaMethod::MisparHechrechi)
-///     .with_cache(true)
-///     .with_vowels(true)
-///     .init_gematria();
-///
-/// let hello = "שָׁלוֹם";
-/// let res_1 = gmctx.calculate_value(hello);
-/// println!("Gematria value: {}", res_1.value());
-/// // The word original vowels preserved on the result
-/// let hello_without_vowels = "שלום";
-/// let res_2 = gmctx.calculate_value(hello_without_vowels);
-/// assert_eq!(res_1.word(), hello);
-/// assert_ne!(res_1.word(), hello_without_vowels);
-/// assert_eq!(res_1.value(), res_2.value());
-/// ```
-///
-/// Authors: Amit Shmulevitch
+//! Gematria-rs Library API
+//!
+//! This module provides an implementation of the Gematria, a traditional Hebrew numerology system.
+//! It supports various methods such as Mispar Hechrechi, Mispar Gadol, Mispar Katan, and Otiyot BeMilui.
+//!
+//! The core functionality is encapsulated in the `GematriaContext` struct, which offers methods to
+//! calculate gematria values for Hebrew characters and words. It supports optional caching for improved
+//! performance and can be configured to preserve or remove Hebrew vowels in the calculations.
+//!
+//! `GematriaBuilder` facilitates a flexible construction of `GematriaContext` with various configuration options.
+//!
+//! Example usage:
+//! ```
+//! use gematria_rs::{GematriaBuilder, GematriaMethod};
+//!
+//! let gmctx = GematriaBuilder::new()
+//!     .with_method(GematriaMethod::MisparHechrechi)
+//!     .with_cache(true)
+//!     .with_vowels(true)
+//!     .init_gematria();
+//!
+//! let hello = "שָׁלוֹם";
+//! let res_1 = gmctx.calculate_value(hello);
+//! println!("Gematria value: {}", res_1.value());
+//! // The word original vowels preserved on the result
+//! let hello_without_vowels = "שלום";
+//! let res_2 = gmctx.calculate_value(hello_without_vowels);
+//! assert_eq!(res_1.word(), hello);
+//! assert_ne!(res_1.word(), hello_without_vowels);
+//! assert_eq!(res_1.value(), res_2.value());
+//! ```
+//!
+//! Author: Amit Shmulevitch
 
 mod methods;
 use methods::OtyiotBeMilui;
 pub use methods::{
-    std_gematria_value,
-    GematriaCalculation,
-    MisparGadol,
-    MisparHechrechi,
+    std_gematria_value, GematriaCalculation, GematriaMethod, MisparGadol, MisparHechrechi,
     MisparKatan,
-    GematriaMethod
 };
 
-use std::{collections::HashMap, cell::RefCell};
+use std::{cell::RefCell, collections::HashMap, io};
 
 type GematriaCtxCache = RefCell<HashMap<(GematriaMethod, String), u32>>;
 
@@ -126,7 +122,6 @@ fn create_hebrew_filled_letters_map() -> FullCharMap {
         ('ר', vec!['ר', 'י', 'ש']),
         ('ש', vec!['ש', 'י', 'ן']),
         ('ת', vec!['ת', 'י', 'ו']),
-        // Include final forms if necessary
     ];
 
     let mut full_name_map = HashMap::new();
@@ -140,8 +135,7 @@ fn create_hebrew_filled_letters_map() -> FullCharMap {
 fn create_hebrew_index_map() -> CharMap {
     let letters = vec![
         'א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ',
-        'ק', 'ר', 'ש', 'ת', 
-        // Final forms
+        'ק', 'ר', 'ש', 'ת', // Final forms
         'ך', 'ם', 'ן', 'ף', 'ץ',
     ];
 
@@ -181,27 +175,28 @@ impl GematriaBuilder {
     /// Initializes the gematria library and returns necessary data structures.
     pub fn init_gematria(self) -> GematriaContext {
         let char_to_index = create_hebrew_index_map();
-        let map = HebrewCharacterMap {
-            char_to_index,
-            // filled_letters,
-        };
+        let map = HebrewCharacterMap { char_to_index };
         let method = self.method.unwrap_or(GematriaMethod::MisparHechrechi);
         GematriaContext::new(map, method, self.enable_cache, self.presevre_vowels)
     }
 }
 
-fn process_method_dyn(method: GematriaMethod, char_map: HebrewCharacterMap) -> Box<dyn GematriaCalculation> {
+fn process_method_dyn(
+    method: GematriaMethod,
+    char_map: HebrewCharacterMap,
+) -> Box<dyn GematriaCalculation> {
     let strategy: Box<dyn GematriaCalculation> = match method {
         GematriaMethod::MisparHechrechi => Box::new(MisparHechrechi),
         GematriaMethod::MisparGadol => Box::new(MisparGadol),
         GematriaMethod::MisparKatan => Box::new(MisparKatan),
-        GematriaMethod::OtiyotBeMilui => Box::new(
-            OtyiotBeMilui::new(
-                create_hebrew_filled_letters_map(),
-                char_map.char_to_index
-            )
+        GematriaMethod::OtiyotBeMilui => Box::new(OtyiotBeMilui::new(
+            create_hebrew_filled_letters_map(),
+            char_map.char_to_index,
+        )),
+        _ => unimplemented!(
+            "{:?} is not yet implemented to calculate gematria values.",
+            method
         ),
-        _ => unimplemented!("{:?} is not yet implemented to calculate gematria values.", method)
     };
 
     strategy
@@ -226,22 +221,16 @@ impl GematriaContext {
             character_map: char_map,
             calculation_strategy: strategy,
             cache,
-            preserve_vowels
+            preserve_vowels,
         }
     }
 
-    pub fn get_current_method(&self) -> GematriaMethod {
-        self.calculation_strategy.method_type()
+    fn remove_hebrew_vowels(&self, text: &str) -> String {
+        text.chars().filter(|&c| !self.is_hebrew_vowel(c)).collect()
     }
 
-    fn remove_hebrew_vowels(&self, text: &str) -> String {
-        text.chars()
-            .filter(|&c| !self.is_hebrew_vowel(c))
-            .collect()
-    }
-    
     fn is_hebrew_vowel(&self, c: char) -> bool {
-        matches!(c, '\u{05B0}'..='\u{05BC}' | '\u{05C1}' | '\u{05C2}' | '\u{05C7}')
+        matches!(c, '\u{0591}'..='\u{05C7}')
     }
 
     fn get_indices_for_word(&self, word: &str) -> Vec<u32> {
@@ -251,11 +240,22 @@ impl GematriaContext {
             .collect()
     }
 
+    fn calculate_value_no_cache(&self, word: &str) -> u32 {
+        self.get_indices_for_word(word)
+            .iter()
+            .map(|&index| self.calculation_strategy.calculate_value(index))
+            .sum()
+    }
+
+    pub fn get_current_method(&self) -> GematriaMethod {
+        self.calculation_strategy.method_type()
+    }
+
     /// Calculates the gematria value of a single Hebrew character.
     pub fn calculate_char_value(&self, character: char) -> u32 {
         let method = self.get_current_method();
         let cache_key = (method.clone(), character.to_string());
-    
+
         // Check if value is in cache
         if let Some(ref cache) = self.cache {
             let cache = cache.borrow();
@@ -263,7 +263,7 @@ impl GematriaContext {
                 return value;
             }
         }
-    
+
         // Calculate and cache the value if not found
         if let Some(index) = self.get_character_index(&character) {
             let value = self.calculation_strategy.calculate_value(*index);
@@ -301,12 +301,59 @@ impl GematriaContext {
         GematriaResult::new(val, self.get_current_method(), processed_text.to_owned())
     }
 
-    // Separate function for calculating value without cache
-    fn calculate_value_no_cache(&self, word: &str) -> u32 {
-        self.get_indices_for_word(word)
-            .iter()
-            .map(|&index| self.calculation_strategy.calculate_value(index))
-            .sum()
+    /// Searches for words in the provided text with a gematria value matching that of the target word.
+    pub fn search_matching_words(&self, target_word: &str, text: &str) -> Vec<String> {
+        let target_value = self.calculate_value(target_word).value();
+        text.split_whitespace()
+            .flat_map(|w| w.split('\u{05BE}'))
+            .filter_map(|word| {
+                let processed_text = if self.preserve_vowels {
+                    word.to_string()
+                } else {
+                    self.remove_hebrew_vowels(word)
+                };
+                let word_value = self.calculate_value(&processed_text).value();
+                if word_value == target_value {
+                    Some(processed_text)
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    /// Reads a text and groups words with matching gematria values, avoiding duplicates.
+    pub fn group_words_by_gematria(&self, text: &str) -> io::Result<Vec<(u32, Vec<String>)>> {
+        let mut grouped_words = HashMap::new();
+        for word in text.split_whitespace().flat_map(|w| w.split('\u{05BE}')) {
+            let processed_text = if self.preserve_vowels {
+                word.to_string()
+            } else {
+                self.remove_hebrew_vowels(word)
+            };
+
+            let value = self.calculate_value(&processed_text).value();
+
+            grouped_words
+                .entry(value)
+                .or_insert_with(Vec::new)
+                .push_if_not_exists(processed_text);
+        }
+
+        // Filter out entries with only one word
+        grouped_words.retain(|_, v| v.len() > 1);
+
+        // Convert HashMap to Vec and sort by the length of the vectors
+        let mut grouped_vec: Vec<(u32, Vec<String>)> = grouped_words.into_iter().collect();
+
+        // Sort by the length of the vectors (primary) and gematria value (secondary)
+        grouped_vec.sort_by(|a, b| match b.1.len().cmp(&a.1.len()) {
+            std::cmp::Ordering::Equal => a.0.cmp(&b.0),
+            other => other,
+        });
+
+        // Return the sorted Vec
+        Ok(grouped_vec)
     }
 
     /// Gets the index of a Hebrew character.
@@ -314,6 +361,7 @@ impl GematriaContext {
         self.character_map.char_to_index.get(&character)
     }
 
+    /// Sets the current gematria method to desired one.
     pub fn set_method(&mut self, method: GematriaMethod) {
         self.calculation_strategy = process_method_dyn(method, self.character_map.clone());
     }
@@ -342,6 +390,19 @@ impl GematriaResult {
     /// Gets the word for which the gematria value was calculated.
     pub fn word(&self) -> &str {
         &self.word
+    }
+}
+
+// Helper function to add a word to the vector if it doesn't already exist
+trait PushIfNotExists {
+    fn push_if_not_exists(&mut self, item: String);
+}
+
+impl PushIfNotExists for Vec<String> {
+    fn push_if_not_exists(&mut self, item: String) {
+        if !self.contains(&item) {
+            self.push(item);
+        }
     }
 }
 
@@ -424,6 +485,7 @@ mod tests {
         let character_final = 'ץ';
         let value = gmctx.calculate_char_value(character);
         let value_same = gmctx.calculate_char_value(character_final);
+
         assert_eq!(value, value_same);
     }
 
@@ -437,6 +499,7 @@ mod tests {
         let character_final = 'ץ';
         let value = gmctx.calculate_char_value(character);
         let value_not_same = gmctx.calculate_char_value(character_final);
+
         assert_ne!(value, value_not_same);
         assert_eq!(value_not_same, 900);
     }
@@ -451,6 +514,7 @@ mod tests {
         let character_final = 'ץ';
         let value = gmctx.calculate_char_value(character);
         let value_same = gmctx.calculate_char_value(character_final);
+
         assert_eq!(value, value_same);
         assert_eq!(value_same, 9);
     }
@@ -465,9 +529,7 @@ mod tests {
         let word = "שלום"; // Replace with an actual Hebrew word
         let result = gmctx.calculate_value(word);
 
-        dbg!(&result); // Debug print the result
         assert_eq!(result.value, 376);
-        dbg!(gmctx.cache);
     }
 
     #[test]
@@ -481,7 +543,7 @@ mod tests {
         let shalom_with_vowel = "שָׁלוֹם";
         let without_vowel = gmctx.calculate_value(shalom_without_vowel);
         let with_vowel = gmctx.calculate_value(shalom_with_vowel);
-        println!("{:?} : {:?}", without_vowel, with_vowel);
+
         assert_eq!(without_vowel.value, with_vowel.value);
         assert_eq!(shalom_with_vowel, with_vowel.word());
         assert_ne!(shalom_without_vowel, with_vowel.word());
@@ -496,6 +558,7 @@ mod tests {
 
         let bh_phrase = "בעזרת השם";
         let bh_phrase_result = gmctx.calculate_value(bh_phrase);
+
         assert_eq!(bh_phrase_result.value(), 1024);
     }
 
@@ -508,10 +571,45 @@ mod tests {
 
         let aleph = 'א';
         let aleph_std_result = gmctx.calculate_char_value(aleph);
+
         assert_eq!(aleph_std_result, 1);
-        
+
         gmctx.set_method(GematriaMethod::OtiyotBeMilui);
         let aleph_filled_result = gmctx.calculate_char_value(aleph);
+
         assert_eq!(aleph_filled_result, 111);
+    }
+
+    #[test]
+    fn test_search_match() {
+        let gmctx = GematriaBuilder::new()
+            .with_method(GematriaMethod::MisparHechrechi)
+            .with_cache(true)
+            .with_vowels(true)
+            .init_gematria();
+
+        let target_word = "יין";
+        let text = "נכנס יין יצא סוד";
+        let matching_words = gmctx.search_matching_words(target_word, text);
+
+        assert!(matching_words.contains(&"סוד".to_string()));
+    }
+
+    #[test]
+    fn test_group_words_by_gematria() {
+        let gmctx = GematriaBuilder::new()
+            .with_method(GematriaMethod::MisparHechrechi)
+            .with_cache(true)
+            .with_vowels(true)
+            .init_gematria();
+
+        let text = "נכנס יין יצא סוד";
+        let result = gmctx.group_words_by_gematria(text).unwrap();
+
+        // Assert that each group has more than one word
+        assert!(result.iter().all(|(_, v)| v.len() > 1));
+
+        // Assert that the vector is sorted by the length of each group
+        assert!(result.windows(2).all(|w| w[0].1.len() >= w[1].1.len()));
     }
 }
