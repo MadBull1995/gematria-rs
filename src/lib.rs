@@ -31,12 +31,12 @@
 //! ```
 //! Example usage with [`IntoGematriaVal`] trait:
 //! ```
-//! use gemtria_rs::*;
+//! use gematria_rs::*;
 //!
 //! let c = 'א';
 //! assert_eq!(c.gematria_val(&GematriaMethod::MisparKatan), 1);
 //! let s = "בעזרת השם";
-//! ssert_eq!(
+//! assert_eq!(
 //!     s.gematria_val(&GematriaMethod::MisparHechrechi),
 //!     1024
 //! );
