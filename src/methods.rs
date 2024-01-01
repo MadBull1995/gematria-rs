@@ -26,9 +26,9 @@ pub trait GematriaCalculation {
 }
 
 /// Calculates the standard gematria value for a given Hebrew letter based on its index.
-/// 
+///
 /// $$f(x) = 10^{\left\lfloor \frac{x - 1}{9} \right\rfloor} \times \left((x - 1) \mod 9 + 1\right)$$
-/// 
+///
 /// Here's a breakdown of this formula:
 ///
 /// - **\( x \)**: This represents the index of the Hebrew character in the alphabet. For example, א (Aleph) is 1, ב (Bet) is 2, and so on.
@@ -38,7 +38,7 @@ pub trait GematriaCalculation {
 /// - **\( ((x - 1) \mod 9 + 1) \)**: This part of the formula calculates the unit value. It takes the index minus one, calculates its modulo 9 (the remainder when divided by 9), and adds 1 to this result.
 ///
 /// - The final value of \( f(x) \) is the product of these two parts.
-/// 
+///
 /// In the standard gematria system (Mispar Hechrechi), each Hebrew letter is assigned a numerical value.
 /// The first ten letters (א to י) are numbered 1 to 10. The next eight letters (כ to צ) are assigned values
 /// 20 to 90 in increments of 10. The final four letters (ק to ת) are assigned values 100 to 400 in increments
@@ -68,7 +68,7 @@ pub trait GematriaCalculation {
 /// let lamed_value = std_gematria_value(&lamed_index);
 /// assert_eq!(lamed_value, 30);
 /// ```
-/// 
+///
 /// # References
 ///
 /// More information about the standard gematria system can be found on the Wikipedia page:
@@ -203,7 +203,8 @@ impl OtyiotBeMilui {
                         27 => 90, // ץ
                         // Standard calculation for other letters
                         index => std_gematria_value(index),
-                    }})
+                    }
+                })
                 .sum()
         } else {
             0

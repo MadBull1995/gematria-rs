@@ -62,12 +62,12 @@ type GematriaCtxCache = RefCell<HashMap<(GematriaMethod, String), u32>>;
 ///
 /// // Initialize the builder and choose the calculation method
 /// let gematria_context = GematriaContext::default();
-/// 
+///
 /// // Use the context to calculate the gematria value of a word
 /// let value = gematria_context.calculate_value("שלום");
 /// println!("Gematria value: {}", value.value());
 /// ```
-/// 
+///
 /// Creating a new `GematriaContext` with a specific calculation method and default settings:
 ///
 /// ```

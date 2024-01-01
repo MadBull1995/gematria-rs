@@ -1,7 +1,7 @@
 extern crate gematria_rs;
-use std::io::{self, Read};
 use clap::{Parser, Subcommand, ValueEnum};
 use gematria_rs::{GematriaBuilder, GematriaMethod};
+use std::io::{self, Read};
 
 /// Simple program to calculate a gematric value from hebrew words or phrases
 #[derive(Parser, Debug)]
@@ -13,7 +13,7 @@ struct Cli {
     /// The gematria calculation method.
     #[clap(short, long, value_enum)]
     method: Option<GematriaMethods>,
-    
+
     /// Enable caching for repeated calculations.
     #[clap(short = 'c', long)]
     enable_cache: bool,
@@ -21,7 +21,7 @@ struct Cli {
     /// Preserve vowels in the words.
     #[clap(short = 'p', long)]
     preserve_vowels: bool,
-    
+
     /// Enable verbose outputs.
     #[clap(short = 'v', long)]
     verbose: bool,
@@ -69,7 +69,6 @@ fn main() {
     let gematria_context = builder.init_gematria();
     match cli.command {
         Commands::Calculate { text } => {
-            
             let result = gematria_context.calculate_value(&text);
 
             if cli.verbose {
@@ -77,32 +76,36 @@ fn main() {
             } else {
                 println!("{}", result.value());
             }
-        },
+        }
         Commands::SearchMatch { word, text } => {
             // Logic for searching within the text to find words matching the gematria value of 'word'
             let text_to_search = match text {
                 Some(t) => t,
                 None => {
                     let mut buffer = String::new();
-                    io::stdin().read_to_string(&mut buffer).expect("Failed to read from stdin");
+                    io::stdin()
+                        .read_to_string(&mut buffer)
+                        .expect("Failed to read from stdin");
                     buffer
-                },
+                }
             };
 
             let matching_words = gematria_context.search_matching_words(&word, &text_to_search);
-        
+
             for matching_word in matching_words {
                 println!("{}", matching_word);
             }
-        },
+        }
         Commands::GroupWords { text } => {
             let text_to_search = match text {
                 Some(t) => t,
                 None => {
                     let mut buffer = String::new();
-                    io::stdin().read_to_string(&mut buffer).expect("Failed to read from stdin");
+                    io::stdin()
+                        .read_to_string(&mut buffer)
+                        .expect("Failed to read from stdin");
                     buffer
-                },
+                }
             };
             match gematria_context.group_words_by_gematria(&text_to_search) {
                 Ok(groups) => {
@@ -113,7 +116,7 @@ fn main() {
                             println!("{:4} -> {}", value, words.join(", "));
                         }
                     }
-                },
+                }
                 Err(e) => eprintln!("Error reading file: {}", e),
             }
         }
