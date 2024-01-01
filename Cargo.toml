@@ -2,9 +2,10 @@
 name = "gematria_rs"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
 authors = ["Amit Shmulevitch <amitsh1995@gmail.com>"]
 description = "A rust implementation of the Gematria, a traditional Hebrew numerology system."
-license = "MIT"
+repository = "https://github.com/MadBull1995/gematria-rs"
 
 [dependencies]
 clap = {version = "4.4.12", features = ["derive"]}
