@@ -1,7 +1,7 @@
 # Gematria-rs
 
 [![Crates.io](https://img.shields.io/crates/v/gematria-rs.svg)](https://crates.io/crates/gematria-rs)
-[![Documentation](https://docs.rs/gematria-rs/badge.svg)](https://docs.rs/gematria-rs)
+[![Documentation](https://docs.rs/gematria-rs/badge.svg)](https://docs.rs/gematria_rs/latest/gematria_rs/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 `Gematria-rs` is a Rust library designed for calculating Gematria values in Hebrew texts. It supports multiple calculation methods and is suitable for analyzing texts like the Hebrew Bible. The library includes a command-line interface (CLI) for easy interaction.
@@ -18,11 +18,17 @@
 ## Usage
 
 ### As a Library
-Include `Gematria-rs` in your Rust project by adding it to your `Cargo.toml`:
+Include `Gematria-rs` in your Rust project by running:
+
+```bash
+cargo add gematria_rs
+```
+
+Or adding it to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-gematria-rs = "0.1.0"
+gematria_rs = "0.1.0"
 ```
 
 Use it in your project:
